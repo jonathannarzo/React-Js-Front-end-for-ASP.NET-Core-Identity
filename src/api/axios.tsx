@@ -1,5 +1,6 @@
 import axios from "axios";
-const BASE_URL = "http://localhost:5186/api/";
+import appConfig from "../settings";
+const BASE_URL = appConfig.baseUrl;
 
 export default axios.create({
     baseURL: BASE_URL,
