@@ -227,7 +227,7 @@ const Users = () => {
         }, {} as Record<string, any>);
     }, [rolesData]);
     // Returns the role name of the specified id
-    const returnUserRole = (id: string) => rolesById[id].name;
+    const returnUserRole = (id: string) => rolesById[id]?.name ?? "Unknown";
 
     // Clear all form fields
     const resetForm = () => {
