@@ -7,8 +7,11 @@ import Header from "./components/Header";
 import RequireAuth from "./components/RequireAuth";
 const Home = lazy(() => import("./Pages/Home"));
 const SamplePage = lazy(() => import("./Pages/SamplePage"));
-const Login = lazy(() => import("./Pages/Login"));
-const Users = lazy(() => import("./Pages/Users"));
+const Login = lazy(() => import("./Pages/Users/Login"));
+const Users = lazy(() => import("./Pages/Users/Users"));
+const Roles = lazy(() => import("./Pages/Users/Roles"));
+const Profile = lazy(() => import("./Pages/Users/Profile"));
+const ChangePassword = lazy(() => import("./Pages/Users/ChangePassword"));
 const NotFound = lazy(() => import("./Pages/NotFound"));
 import Unauthorized from "./Pages/Unauthorized";
 import PersistLogin from "./components/PersistLogin";
@@ -59,15 +62,39 @@ function App() {
                                 }
                             />
                         </Route>
+                        <Route
+                            path="users"
+                            element={
+                                <Suspense fallback={<>...Loading...</>}>
+                                    <Users />
+                                </Suspense>
+                            }
+                        />
+                        <Route
+                            path="roles"
+                            element={
+                                <Suspense fallback={<>...Loading...</>}>
+                                    <Roles />
+                                </Suspense>
+                            }
+                        />
+                        <Route
+                            path="profile"
+                            element={
+                                <Suspense fallback={<>...Loading...</>}>
+                                    <Profile />
+                                </Suspense>
+                            }
+                        />
+                        <Route
+                            path="changepassword"
+                            element={
+                                <Suspense fallback={<>...Loading...</>}>
+                                    <ChangePassword />
+                                </Suspense>
+                            }
+                        />
                     </Route>
-                    <Route
-                        path="users"
-                        element={
-                            <Suspense fallback={<>...Loading...</>}>
-                                <Users />
-                            </Suspense>
-                        }
-                    />
                     <Route
                         path="login"
                         element={

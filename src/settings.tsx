@@ -1,6 +1,5 @@
 const appConfig = {
-    baseUrl:
-        "https://angapp-gaerfhhyh8hvaper.canadacentral-01.azurewebsites.net/api",
+    baseUrl: "http://localhost:5186/api",
 };
 
 export default appConfig;

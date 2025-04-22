@@ -2,6 +2,8 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import useLogout from "../hooks/useLogout";
 import useAuth from "../hooks/useAuth";
 import { useState } from "react";
+import { Dropdown } from "react-bootstrap";
+import { NavDropdown } from "react-bootstrap";
 
 const Header = () => {
     const navigate = useNavigate();
@@ -18,6 +20,9 @@ const Header = () => {
         navigate("/login");
     };
     const [openMenu, toggleOpenMenu] = useState(false);
+
+    var isAuthenticated = Object.keys(auth).length > 0;
+
     return (
         <>
             <nav
@@ -68,16 +73,61 @@ const Header = () => {
                                     Users
                                 </Link>
                             </li>
+                            <li className="nav-item">
+                                <Link
+                                    className={activeNav("/roles")}
+                                    to="/roles"
+                                >
+                                    Roles
+                                </Link>
+                            </li>
+                            <NavDropdown
+                                title="Dropdown"
+                                id="basic-nav-dropdown"
+                            >
+                                <NavDropdown.Item href="#action/3.1">
+                                    Action
+                                </NavDropdown.Item>
+                                <NavDropdown.Item href="#action/3.2">
+                                    Another action
+                                </NavDropdown.Item>
+                                <NavDropdown.Item href="#action/3.3">
+                                    Something
+                                </NavDropdown.Item>
+                                <NavDropdown.Divider />
+                                <NavDropdown.Item href="#action/3.4">
+                                    Separated link
+                                </NavDropdown.Item>
+                            </NavDropdown>
                         </ul>
                         <form className="d-flex" role="search">
-                            {auth?.accessToken ? (
-                                <button
-                                    className="btn btn-outline-success"
-                                    type="button"
-                                    onClick={signOut}
-                                >
-                                    Logout
-                                </button>
+                            {isAuthenticated ? (
+                                <Dropdown>
+                                    <Dropdown.Toggle variant="btn btn-outline-success">
+                                        My Account
+                                    </Dropdown.Toggle>
+                                    <Dropdown.Menu>
+                                        <Link
+                                            to="/profile"
+                                            className="dropdown-item"
+                                        >
+                                            Profile
+                                        </Link>
+                                        <Link
+                                            to="/changepassword"
+                                            className="dropdown-item"
+                                        >
+                                            Change Password
+                                        </Link>
+                                        <Dropdown.Divider />
+                                        <Dropdown.Item
+                                            href="#/signout"
+                                            onClick={signOut}
+                                        >
+                                            Logout
+                                        </Dropdown.Item>
+                                    </Dropdown.Menu>
+                                </Dropdown>
                             ) : (
                                 <button
                                     className="btn btn-outline-success"
@@ -94,22 +144,7 @@ const Header = () => {
             <div className="nav-scroller bg-body shadow-sm">
                 <nav className="nav" aria-label="Secondary navigation">
                     <a className="nav-link active" aria-current="page" href="#">
-                        Dashboard
-                    </a>
-                    <a className="nav-link" href="#">
-                        Friends
-                        <span className="badge text-bg-light rounded-pill align-text-bottom">
-                            27
-                        </span>
-                    </a>
-                    <a className="nav-link" href="#">
-                        Explore
-                    </a>
-                    <a className="nav-link" href="#">
-                        Suggestions
-                    </a>
-                    <a className="nav-link" href="#">
-                        Link
+                        My Profile
                     </a>
                     <a className="nav-link" href="#">
                         Link

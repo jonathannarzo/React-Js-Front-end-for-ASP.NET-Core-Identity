@@ -1,9 +1,9 @@
 import { Modal } from "react-bootstrap";
 import { ChevronLeft, ChevronRight } from "react-feather";
-import axios from "../api/axios";
+import axios from "../../api/axios";
 import { toast } from "react-toastify";
 import { useEffect, useState, useMemo } from "react";
-import useAxiosPrivate from "../hooks/useAxiosPrivate";
+import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 
 const Users = () => {
     const accountUrl = "Account/";
@@ -25,6 +25,7 @@ const Users = () => {
         FirstName: "",
         LastName: "",
         Password: "",
+        PhoneNumber: "",
         Roles: [],
     });
 
@@ -41,6 +42,8 @@ const Users = () => {
 
     // List of roles
     const [rolesData, setRolesData] = useState<any[]>([]);
+
+    const [errors, setErrors] = useState<any>({});
 
     useEffect(() => {
         getDataList();
@@ -94,6 +97,35 @@ const Users = () => {
             [e.target.name]: e.target.value,
         }));
 
+    const normalizeErrors = (
+        errorObj: Record<string, string[]>
+    ): Record<string, string[]> => {
+        const normalized: Record<string, string[]> = {};
+
+        for (const key in errorObj) {
+            const lowerKey = key.toLowerCase();
+
+            // Handle 'password' errors
+            if (lowerKey.includes("password")) {
+                if (!normalized["Password"]) {
+                    normalized["Password"] = [];
+                }
+                normalized["Password"].push(...errorObj[key]);
+            }
+            // Handle 'email' errors
+            else if (lowerKey.includes("email")) {
+                if (!normalized["Email"]) {
+                    normalized["Email"] = [];
+                }
+                normalized["Email"].push(...errorObj[key]);
+            } else {
+                normalized[key] = errorObj[key];
+            }
+        }
+
+        return normalized;
+    };
+
     // method to create new category
     const handleCreate = (formData: {
         Id: string;
@@ -101,31 +133,35 @@ const Users = () => {
         FirstName: string;
         LastName: string;
         Password: string;
+        PhoneNumber: string;
         Roles: string[];
     }) => {
-        axios
+        axiosPrivate
             .post(accountUrl + "register", formData)
             .then(function (response) {
-                toast.success("Customer successfully added!");
+                toast.success("User successfully added!");
                 getDataList();
                 resetForm();
                 handleModalClose();
                 return true;
             })
             .catch(function (error) {
-                console.log(error);
+                var errorInfo = error?.response?.data?.errors;
+                var normalizedErrors = normalizeErrors(errorInfo);
+                setErrors(normalizedErrors);
                 return false;
             });
     };
 
     // Show data of categories in the form field
     const handleEdit = (Id: string) => {
-        setModalTitle("Edit Customer");
+        setModalTitle("Edit User");
         handleModalShow();
+        resetForm();
 
         // set the Id of the data to edit
         setId(Id);
-        axios
+        axiosPrivate
             .get(accountUrl + Id)
             .then((result) => {
                 // information of the clicked user
@@ -151,6 +187,7 @@ const Users = () => {
                     FirstName: userData.firstName,
                     LastName: userData.lastName,
                     Password: "",
+                    PhoneNumber: userData.phoneNumber,
                     Roles: roleArr,
                 });
 
@@ -168,12 +205,13 @@ const Users = () => {
         Email: string;
         FirstName: string;
         LastName: string;
+        PhoneNumber: string;
         Roles: string[];
     }) => {
-        axios
+        axiosPrivate
             .put(accountUrl + Id, formData)
             .then(function (response) {
-                toast.success("Customer successfully updated!");
+                toast.success("User successfully updated!");
                 getDataList();
                 return true;
             })
@@ -204,10 +242,10 @@ const Users = () => {
     };
 
     const handeDelete = (Id: string) => {
-        axios
+        axiosPrivate
             .delete(accountUrl + Id)
             .then(function (response) {
-                toast.success("Customer successfully deleted!");
+                toast.success("User successfully deleted!");
                 getDataList();
                 return true;
             })
@@ -237,6 +275,7 @@ const Users = () => {
             FirstName: "",
             LastName: "",
             Password: "",
+            PhoneNumber: "",
             Roles: [],
         });
 
@@ -247,6 +286,9 @@ const Users = () => {
                 checked: false,
             }))
         );
+
+        // Reset form error
+        setErrors({});
     };
 
     const updateCheckStatus = (e: any) => {
@@ -289,6 +331,7 @@ const Users = () => {
                         <th>Email</th>
                         <th>FirstName</th>
                         <th>LastName</th>
+                        <th>Phone</th>
                         <th>Role</th>
                         <th>Actions</th>
                     </tr>
@@ -299,6 +342,7 @@ const Users = () => {
                             <td>{item.email}</td>
                             <td>{item.firstName}</td>
                             <td>{item.lastName}</td>
+                            <td>{item.phoneNumber}</td>
                             <td>
                                 {item.userRoles?.length ? (
                                     item.userRoles.map((ui: any, n: number) => (
@@ -335,7 +379,7 @@ const Users = () => {
                     ))}
                     {dataList.length < 1 && (
                         <tr>
-                            <td colSpan={4}>No record found.</td>
+                            <td colSpan={6}>No record found.</td>
                         </tr>
                     )}
                 </tbody>
@@ -375,7 +419,7 @@ const Users = () => {
                 <Modal.Header closeButton>
                     <Modal.Title>{modalTitle}</Modal.Title>
                 </Modal.Header>
-                <form method="post" onSubmit={handleSubmit} id="categoryForm">
+                <form method="post" onSubmit={handleSubmit} id="userForm">
                     <Modal.Body>
                         <div className="mb-3 row">
                             <label
@@ -387,12 +431,17 @@ const Users = () => {
                             <div className="col-sm-10">
                                 <input
                                     type="text"
-                                    className="form-control"
+                                    className={`form-control ${
+                                        errors?.Email ? "is-invalid" : ""
+                                    }`}
                                     name="Email"
                                     autoComplete="off"
                                     value={formData.Email}
                                     onChange={handleChange}
                                 />
+                                <div className="invalid-feedback">
+                                    {errors?.Email}
+                                </div>
                             </div>
                         </div>
                         <div className="mb-3 row">
@@ -405,12 +454,17 @@ const Users = () => {
                             <div className="col-sm-10">
                                 <input
                                     type="text"
-                                    className="form-control"
+                                    className={`form-control ${
+                                        errors?.FirstName ? "is-invalid" : ""
+                                    }`}
                                     name="FirstName"
                                     autoComplete="off"
                                     value={formData.FirstName}
                                     onChange={handleChange}
                                 />
+                                <div className="invalid-feedback">
+                                    {errors?.FirstName}
+                                </div>
                             </div>
                         </div>
                         <div className="mb-3 row">
@@ -423,12 +477,40 @@ const Users = () => {
                             <div className="col-sm-10">
                                 <input
                                     type="text"
-                                    className="form-control"
+                                    className={`form-control ${
+                                        errors?.LastName ? "is-invalid" : ""
+                                    }`}
                                     name="LastName"
                                     autoComplete="off"
                                     value={formData.LastName}
                                     onChange={handleChange}
                                 />
+                                <div className="invalid-feedback">
+                                    {errors?.LastName}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="mb-3 row">
+                            <label
+                                htmlFor="LastName"
+                                className="col-sm-2 col-form-label"
+                            >
+                                PhoneNumber
+                            </label>
+                            <div className="col-sm-10">
+                                <input
+                                    type="text"
+                                    className={`form-control ${
+                                        errors?.PhoneNumber ? "is-invalid" : ""
+                                    }`}
+                                    name="PhoneNumber"
+                                    autoComplete="off"
+                                    value={formData.PhoneNumber}
+                                    onChange={handleChange}
+                                />
+                                <div className="invalid-feedback">
+                                    {errors?.PhoneNumber}
+                                </div>
                             </div>
                         </div>
                         {Id === "0" && (
@@ -442,12 +524,23 @@ const Users = () => {
                                 <div className="col-sm-10">
                                     <input
                                         type="password"
-                                        className="form-control"
+                                        className={`form-control ${
+                                            errors?.Password ? "is-invalid" : ""
+                                        }`}
                                         name="Password"
                                         autoComplete="off"
                                         value={formData.Password}
                                         onChange={handleChange}
                                     />
+                                    <div className="invalid-feedback">
+                                        <ul className="mb-0">
+                                            {errors?.Password?.map(
+                                                (msg: string, i: number) => (
+                                                    <li key={i}>{msg}</li>
+                                                )
+                                            )}
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         )}

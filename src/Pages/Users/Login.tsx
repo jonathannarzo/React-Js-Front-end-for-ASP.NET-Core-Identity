@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
-import useAuth from "../hooks/useAuth";
-import axios from "../api/axios";
+import useAuth from "../../hooks/useAuth";
+import axios from "../../api/axios";
 import { AxiosError } from "axios";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 
