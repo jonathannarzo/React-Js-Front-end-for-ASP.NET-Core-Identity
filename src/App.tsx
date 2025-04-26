@@ -40,7 +40,7 @@ function App() {
                         index
                         element={
                             <Suspense fallback={<>...Loading...</>}>
-                                <Home />
+                                <Profile />
                             </Suspense>
                         }
                     />

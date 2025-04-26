@@ -52,11 +52,11 @@ const Header = () => {
                         id="navbarsExampleDefault"
                     >
                         <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-                            <li className="nav-item">
+                            {/* <li className="nav-item">
                                 <Link className={activeNav("/")} to="/">
                                     Dashboard
                                 </Link>
-                            </li>
+                            </li> */}
                             <li className="nav-item">
                                 <Link
                                     className={activeNav("/samplepage")}
@@ -81,7 +81,7 @@ const Header = () => {
                                     Roles
                                 </Link>
                             </li>
-                            <NavDropdown
+                            {/* <NavDropdown
                                 title="Dropdown"
                                 id="basic-nav-dropdown"
                             >
@@ -98,7 +98,7 @@ const Header = () => {
                                 <NavDropdown.Item href="#action/3.4">
                                     Separated link
                                 </NavDropdown.Item>
-                            </NavDropdown>
+                            </NavDropdown> */}
                         </ul>
                         <form className="d-flex" role="search">
                             {isAuthenticated ? (

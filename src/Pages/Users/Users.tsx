@@ -1,9 +1,9 @@
 import { Modal } from "react-bootstrap";
 import { ChevronLeft, ChevronRight } from "react-feather";
-import axios from "../../api/axios";
 import { toast } from "react-toastify";
 import { useEffect, useState, useMemo } from "react";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
+import { confirm } from "../../utils/confirm";
 
 const Users = () => {
     const accountUrl = "Account/";
@@ -45,6 +45,10 @@ const Users = () => {
 
     const [errors, setErrors] = useState<any>({});
 
+    const [loading, setLoading] = useState<boolean>(false);
+    const [submitLoading, setSubmitLoading] = useState<boolean>(false);
+    const [loadingUserData, setLoadingUserData] = useState<boolean>(false);
+
     useEffect(() => {
         getDataList();
         getRoles();
@@ -55,6 +59,7 @@ const Users = () => {
         var page = accountUrl + "?pageNum=" + pageNum;
 
         try {
+            setLoading(true);
             const response = await axiosPrivate.get(page);
 
             setDataList(response.data.dataList);
@@ -67,6 +72,8 @@ const Users = () => {
             });
         } catch (error) {
             console.log(error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -136,6 +143,7 @@ const Users = () => {
         PhoneNumber: string;
         Roles: string[];
     }) => {
+        setSubmitLoading(true);
         axiosPrivate
             .post(accountUrl + "register", formData)
             .then(function (response) {
@@ -150,6 +158,9 @@ const Users = () => {
                 var normalizedErrors = normalizeErrors(errorInfo);
                 setErrors(normalizedErrors);
                 return false;
+            })
+            .finally(() => {
+                setSubmitLoading(false);
             });
     };
 
@@ -161,6 +172,8 @@ const Users = () => {
 
         // set the Id of the data to edit
         setId(Id);
+
+        setLoadingUserData(true);
         axiosPrivate
             .get(accountUrl + Id)
             .then((result) => {
@@ -169,7 +182,7 @@ const Users = () => {
                 // array of user roles names
                 const roleArr = result.data.role;
 
-                // Update roles data checkbox depending on the clicked user
+                // Update roles data checkbox depending on the chosen user
                 setRolesData((prevState) => {
                     const newState = Array.from(prevState);
                     prevState.map((item, index) => {
@@ -183,11 +196,11 @@ const Users = () => {
                 // set form data to the selected user
                 setformData({
                     Id: Id,
-                    Email: userData.email,
-                    FirstName: userData.firstName,
-                    LastName: userData.lastName,
+                    Email: userData.email ?? "",
+                    FirstName: userData.firstName ?? "",
+                    LastName: userData.lastName ?? "",
                     Password: "",
-                    PhoneNumber: userData.phoneNumber,
+                    PhoneNumber: userData.phoneNumber ?? "",
                     Roles: roleArr,
                 });
 
@@ -196,6 +209,9 @@ const Users = () => {
             .catch((error) => {
                 console.log(error);
                 return false;
+            })
+            .finally(() => {
+                setLoadingUserData(false);
             });
     };
 
@@ -208,6 +224,7 @@ const Users = () => {
         PhoneNumber: string;
         Roles: string[];
     }) => {
+        setSubmitLoading(true);
         axiosPrivate
             .put(accountUrl + Id, formData)
             .then(function (response) {
@@ -218,6 +235,9 @@ const Users = () => {
             .catch(function (error) {
                 console.log(error);
                 return false;
+            })
+            .finally(() => {
+                setSubmitLoading(false);
             });
     };
 
@@ -241,7 +261,17 @@ const Users = () => {
         }
     };
 
-    const handeDelete = (Id: string) => {
+    const handeDelete = async (Id: string, FirstName: string) => {
+        const confirmDelete = await confirm({
+            title: "Delete User",
+            message:
+                "Are you sure you want to delete user (" + FirstName + ")?",
+        });
+
+        // deleting cancelled
+        if (!confirmDelete) return false;
+
+        // Proceed to delete
         axiosPrivate
             .delete(accountUrl + Id)
             .then(function (response) {
@@ -337,47 +367,59 @@ const Users = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {dataList.map((item, index) => (
-                        <tr key={index}>
-                            <td>{item.email}</td>
-                            <td>{item.firstName}</td>
-                            <td>{item.lastName}</td>
-                            <td>{item.phoneNumber}</td>
-                            <td>
-                                {item.userRoles?.length ? (
-                                    item.userRoles.map((ui: any, n: number) => (
-                                        <div key={n}>
-                                            {returnUserRole(ui.roleId)}
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div>No roles assigned</div>
-                                )}
-                            </td>
-                            <td>
-                                <button
-                                    className="btn btn-primary btn-sm"
-                                    onClick={() => handleEdit(item.id)}
+                    {loading ? (
+                        <tr>
+                            <td colSpan={6} className="text-center">
+                                <div
+                                    className="spinner-border spinner-border-sm"
+                                    role="status"
                                 >
-                                    Edit
-                                </button>
-                                &nbsp;
-                                <button
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() =>
-                                        window.confirm(
-                                            "Are you sure to delete user (" +
-                                                item.firstName +
-                                                ")?"
-                                        ) && handeDelete(item.id)
-                                    }
-                                >
-                                    Delete
-                                </button>
+                                    <span className="visually-hidden">
+                                        Loading...
+                                    </span>
+                                </div>
                             </td>
                         </tr>
-                    ))}
-                    {dataList.length < 1 && (
+                    ) : dataList.length > 0 ? (
+                        dataList.map((item, index) => (
+                            <tr key={index}>
+                                <td>{item.email}</td>
+                                <td>{item.firstName}</td>
+                                <td>{item.lastName}</td>
+                                <td>{item.phoneNumber}</td>
+                                <td>
+                                    {item.userRoles?.length ? (
+                                        item.userRoles.map(
+                                            (ui: any, n: number) => (
+                                                <div key={n}>
+                                                    {returnUserRole(ui.roleId)}
+                                                </div>
+                                            )
+                                        )
+                                    ) : (
+                                        <div>No roles assigned</div>
+                                    )}
+                                </td>
+                                <td>
+                                    <button
+                                        className="btn btn-primary btn-sm"
+                                        onClick={() => handleEdit(item.id)}
+                                    >
+                                        Edit
+                                    </button>
+                                    &nbsp;
+                                    <button
+                                        className="btn btn-danger btn-sm"
+                                        onClick={() =>
+                                            handeDelete(item.id, item.firstName)
+                                        }
+                                    >
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        ))
+                    ) : (
                         <tr>
                             <td colSpan={6}>No record found.</td>
                         </tr>
@@ -421,6 +463,21 @@ const Users = () => {
                 </Modal.Header>
                 <form method="post" onSubmit={handleSubmit} id="userForm">
                     <Modal.Body>
+                        {loadingUserData && (
+                            <div>
+                                <div className="d-flex align-items-center">
+                                    <small>
+                                        <strong>Loading User data..</strong>
+                                    </small>
+
+                                    <div
+                                        className="spinner-border spinner-border-sm"
+                                        role="status"
+                                    ></div>
+                                </div>
+                                <br />
+                            </div>
+                        )}
                         <div className="mb-3 row">
                             <label
                                 htmlFor="Email"
@@ -495,7 +552,7 @@ const Users = () => {
                                 htmlFor="LastName"
                                 className="col-sm-2 col-form-label"
                             >
-                                PhoneNumber
+                                PhoneNo.
                             </label>
                             <div className="col-sm-10">
                                 <input
@@ -577,6 +634,21 @@ const Users = () => {
                         </div>
                     </Modal.Body>
                     <Modal.Footer>
+                        {submitLoading && (
+                            <div>
+                                <small>
+                                    <strong>Loading..</strong>
+                                </small>
+                                <div
+                                    className="spinner-border spinner-border-sm"
+                                    role="status"
+                                >
+                                    <span className="visually-hidden">
+                                        Loading...
+                                    </span>
+                                </div>
+                            </div>
+                        )}
                         <button
                             type="button"
                             className="btn btn-secondary"
@@ -585,7 +657,11 @@ const Users = () => {
                         >
                             Close
                         </button>
-                        <button type="submit" className="btn btn-primary">
+                        <button
+                            type="submit"
+                            className="btn btn-primary"
+                            disabled={submitLoading}
+                        >
                             Submit
                         </button>
                     </Modal.Footer>

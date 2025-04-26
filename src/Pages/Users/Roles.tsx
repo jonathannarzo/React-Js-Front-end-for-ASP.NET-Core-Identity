@@ -4,6 +4,7 @@ import axios from "../../api/axios";
 import { toast } from "react-toastify";
 import { useEffect, useState, useMemo } from "react";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
+import { confirm } from "../../utils/confirm";
 
 const Roles = () => {
     const rolesUrl = "Roles/";
@@ -36,6 +37,8 @@ const Roles = () => {
 
     const [errors, setErrors] = useState<any>({});
 
+    const [loading, setLoading] = useState<boolean>(false);
+
     useEffect(() => {
         getDataList();
     }, []);
@@ -45,6 +48,7 @@ const Roles = () => {
         var page = rolesUrl + "?pageNum=" + pageNum;
 
         try {
+            setLoading(true);
             const response = await axiosPrivate.get(page);
 
             setDataList(response.data.dataList);
@@ -57,6 +61,8 @@ const Roles = () => {
             });
         } catch (error) {
             console.log(error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -95,7 +101,15 @@ const Roles = () => {
         handleCreate(formData);
     };
 
-    const handeDelete = (Id: string) => {
+    const handeDelete = async (Id: string, RoleName: string) => {
+        const confirmDelete = await confirm({
+            title: "Delete Role",
+            message: "Are you sure you want to delete role (" + RoleName + ")?",
+        });
+
+        // deleting cancelled
+        if (!confirmDelete) return false;
+
         axios
             .delete(rolesUrl + Id)
             .then(function (response) {
@@ -148,28 +162,40 @@ const Roles = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {dataList.map((item, index) => (
-                        <tr key={index}>
-                            <td>{item.name}</td>
-                            <td>
-                                <button
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() =>
-                                        window.confirm(
-                                            "Are you sure to delete role (" +
-                                                item.name +
-                                                ")?"
-                                        ) && handeDelete(item.id)
-                                    }
+                    {loading ? (
+                        <tr>
+                            <td colSpan={4} className="text-center">
+                                <div
+                                    className="spinner-border spinner-border-sm"
+                                    role="status"
                                 >
-                                    Delete
-                                </button>
+                                    <span className="visually-hidden">
+                                        Loading...
+                                    </span>
+                                </div>
                             </td>
                         </tr>
-                    ))}
-                    {dataList.length < 1 && (
+                    ) : dataList.length > 0 ? (
+                        dataList.map((item, index) => (
+                            <tr key={index}>
+                                <td>{item.name}</td>
+                                <td>
+                                    <button
+                                        className="btn btn-danger btn-sm"
+                                        onClick={() =>
+                                            handeDelete(item.id, item.name)
+                                        }
+                                    >
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        ))
+                    ) : (
                         <tr>
-                            <td colSpan={4}>No record found.</td>
+                            <td colSpan={4} className="text-center">
+                                No record found.
+                            </td>
                         </tr>
                     )}
                 </tbody>
